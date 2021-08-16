@@ -976,13 +976,18 @@ export class CodeApplication extends Disposable {
 		// If enable-crash-reporter argv is undefined then this is a fresh start,
 		// based on telemetry.enableCrashreporter settings, generate a UUID which
 		// will be used as crash reporter id and also update the json file.
+
+		// If enable-crash-reporter argv is defined and does not match the
+		// telemetry.enableCrashreporter setting then change the value to match it
 		try {
 			const argvContent = await this.fileService.readFile(this.environmentMainService.argvResource);
 			const argvString = argvContent.value.toString();
 			const argvJSON = JSON.parse(stripComments(argvString));
+
+			const enableCrashReporterSetting = this.configurationService.getValue('telemetry.enableCrashReporter');
+			const enableCrashReporter = typeof enableCrashReporterSetting === 'boolean' ? enableCrashReporterSetting : true;
+
 			if (argvJSON['enable-crash-reporter'] === undefined) {
-				const enableCrashReporterSetting = this.configurationService.getValue('telemetry.enableCrashReporter');
-				const enableCrashReporter = typeof enableCrashReporterSetting === 'boolean' ? enableCrashReporterSetting : true;
 				const additionalArgvContent = [
 					'',
 					'	// Allows to disable crash reporting.',
@@ -995,6 +1000,12 @@ export class CodeApplication extends Disposable {
 					'}'
 				];
 				const newArgvString = argvString.substring(0, argvString.length - 2).concat(',\n', additionalArgvContent.join('\n'));
+
+				await this.fileService.writeFile(this.environmentMainService.argvResource, VSBuffer.fromString(newArgvString));
+			} else if (argvJSON['enable-crash-reporter'] != enableCrashReporter) {
+				const enableCrashReporterRegex = /\"enable\-crash\-reporter\"\s*\:\s*(true|false)\s*\,/g;
+
+				const newArgvString = argvString.replace(enableCrashReporterRegex, `"enable-crash-reporter": ${enableCrashReporter},`);
 
 				await this.fileService.writeFile(this.environmentMainService.argvResource, VSBuffer.fromString(newArgvString));
 			}
