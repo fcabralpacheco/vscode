@@ -239,7 +239,7 @@ Registry.as<IConfigurationRegistry>(Extensions.Configuration).registerConfigurat
 		'telemetry.enableCrashReporter': {
 			'type': 'boolean',
 			'description': localize('telemetry.enableCrashReporting', "Enable crash reports to be collected. This helps us improve stability. \nThis option requires restart to take effect."),
-			'default': false,
+			'default': true,
 			'restricted': true,
 			'scope': ConfigurationScope.APPLICATION,
 			'tags': ['usesOnlineServices', 'telemetry']
